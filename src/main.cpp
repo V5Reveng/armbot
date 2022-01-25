@@ -78,9 +78,10 @@ public:
 		auto const rotate_axis = transform_motor_power(_rotate_axis);
 
 		m_front_left.set_value(forward_axis + strafe_axis + rotate_axis);
-		m_front_right.set_value(-forward_axis + strafe_axis + rotate_axis);
 		m_back_left.set_value(forward_axis - strafe_axis + rotate_axis);
-		m_back_right.set_value(-forward_axis - strafe_axis + rotate_axis);
+		// right motors are inverted
+		m_front_right.set_value(-(forward_axis - strafe_axis - rotate_axis));
+		m_back_right.set_value(-(forward_axis + strafe_axis - rotate_axis));
 	}
 protected:
 	static int32_t transform_motor_power(double const power_out_of_one) {
