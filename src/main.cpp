@@ -27,8 +27,8 @@ protected:
 public:
 	Arm(uint8_t const port) : m_motor{ port } {}
 
-	void set_position(double const angle, int32_t const velocity = VELOCITY) {
-		m_motor.move_absolute(std::clamp(angle, CLOSED_POSITION, OPEN_POSITION), velocity);
+	void set_position(double const angle) {
+		m_motor.move_absolute(std::clamp(angle, CLOSED_POSITION, OPEN_POSITION), VELOCITY);
 	}
 	void raise() {
 		set_position(OPEN_POSITION);
