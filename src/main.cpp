@@ -17,20 +17,40 @@ void autonomous() {}
 #define MOTOR_MAX_VOLTAGE 127
 #define CONTROLLER_MAX_ANALOG 127
 
+class Arm {
+protected:
+	pros::Motor m_motor;
+
+	static constexpr int32_t VELOCITY = MOTOR_MAX_VOLTAGE;  // the lift is geared down pretty significantly so we want to go as fast as possible
+	static constexpr double OPEN_POSITION = 100.0;  // FIXME arbitrary
+	static constexpr double CLOSED_POSITION = 0.0;
+public:
+	Arm(uint8_t const port) : m_motor{ port } {}
+
+	void set_position(double const angle, int32_t const velocity = VELOCITY) {
+		m_motor.move_absolute(std::clamp(angle, CLOSED_POSITION, OPEN_POSITION), velocity);
+	}
+	void raise() {
+		set_position(OPEN_POSITION);
+	}
+	void lower() {
+		set_position(CLOSED_POSITION);
+	}
+	void stop_moving() {
+		m_motor.move(0);
+	}
+};
+
 class Claw {
 protected:
-	static constexpr double CLAMP_OPEN_POSITION = 60.0;  // FIXME arbitrary
-	static constexpr double CLAMP_CLOSED_POSITION = 0.0;
-	static constexpr int32_t CLAMP_VELOCITY = MOTOR_MAX_VOLTAGE / 2;  // FIXME arbitrary
-	static constexpr int32_t LIFT_VELOCITY = MOTOR_MAX_VOLTAGE;  // the lift is geared down pretty significantly so we want to go as fast as possible
-	static constexpr double LIFT_OPEN_POSITION = 100.0;  // FIXME arbitrary
-	static constexpr double LIFT_CLOSED_POSITION = 0.0;
-
-	pros::Motor m_lift_motor;
-	pros::Motor m_clamp_motor;
+	pros::Motor m_motor;
 	bool m_is_open = false;
+
+	static constexpr double OPEN_POSITION = 60.0;  // FIXME arbitrary
+	static constexpr double CLOSED_POSITION = 0.0;
+	static constexpr int32_t VELOCITY = MOTOR_MAX_VOLTAGE / 2;  // FIXME arbitrary
 public:
-	Claw(uint8_t const lift_port, uint8_t const clamp_port) : m_lift_motor{ lift_port }, m_clamp_motor{ clamp_port } {}
+	Claw(uint8_t const port) : m_motor{ port } {}
 	~Claw() {
 		set_open(false);
 	}
@@ -45,22 +65,9 @@ public:
 	void toggle_open() {
 		set_open(!is_open());
 	}
-
-	void set_lift_angle(double const angle, int32_t const velocity = LIFT_VELOCITY) {
-		m_lift_motor.move_absolute(std::clamp(angle, LIFT_CLOSED_POSITION, LIFT_OPEN_POSITION), velocity);
-	}
-	void raise_lift() {
-		set_lift_angle(LIFT_OPEN_POSITION);
-	}
-	void lower_lift() {
-		set_lift_angle(LIFT_CLOSED_POSITION);
-	}
-	void stop_lift() {
-		m_lift_motor.move(0);
-	}
 protected:
 	void reify_open_state() {
-		m_clamp_motor.move_absolute(m_is_open ? CLAMP_OPEN_POSITION : CLAMP_CLOSED_POSITION, CLAMP_VELOCITY);
+		m_motor.move_absolute(m_is_open ? OPEN_POSITION : CLOSED_POSITION, VELOCITY);
 	}
 };
 
@@ -93,31 +100,29 @@ class Robot {
 protected:
 	pros::Controller controller{ pros::E_CONTROLLER_MASTER };
 	Drivetrain drivetrain{ 1, 2, 3, 4 };  // FIXME arbitrary ports
-	Claw claw{ 1, 2 };  // FIXME arbitrary ports
+	Claw claw{ 1 };  // FIXME arbitrary ports
+	Arm arm{ 2 };  // FIXME arbitrary ports
 public:
 	Robot() {}
 
 	void update() {
-		update_claw();
 		update_drivetrain();
+		update_arm();
+		update_claw();
 	}
 protected:
 	void update_claw() {
-		update_claw_clamp();
-		update_claw_arm();
-	}
-	void update_claw_clamp() {
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
 			claw.toggle_open();
 		}
 	}
-	void update_claw_arm() {
+	void update_arm() {
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-			claw.raise_lift();
+			arm.raise();
 		} else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-			claw.lower_lift();
+			arm.lower();
 		} else {
-			claw.stop_lift();
+			arm.stop_moving();
 		}
 	}
 	void update_drivetrain() {
