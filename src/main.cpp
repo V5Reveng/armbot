@@ -42,6 +42,9 @@ public:
 		m_is_open = new_state;
 		reify_open_state();
 	}
+	void toggle_open() {
+		set_open(!is_open());
+	}
 
 	void set_lift_angle(double const angle, int32_t const velocity = LIFT_VELOCITY) {
 		m_lift_motor.move_absolute(std::clamp(angle, LIFT_CLOSED_POSITION, LIFT_OPEN_POSITION), velocity);
@@ -103,10 +106,8 @@ protected:
 		update_claw_arm();
 	}
 	void update_claw_clamp() {
-		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-			claw.set_open(true);
-		} else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
-			claw.set_open(false);
+		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
+			claw.toggle_open();
 		}
 	}
 	void update_claw_arm() {
