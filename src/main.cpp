@@ -19,16 +19,20 @@ void autonomous() {}
 
 class Arm {
 protected:
-	pros::Motor m_motor;
+	pros::Motor m_motor_1, m_motor_2;
 
-	static constexpr int32_t VELOCITY = MOTOR_MAX_VOLTAGE;  // the lift is geared down pretty significantly so we want to go as fast as possible
-	static constexpr double OPEN_POSITION = 100.0;  // FIXME arbitrary
+	static constexpr int32_t VELOCITY = 35;  // the lift is geared down pretty significantly so we want to go as fast as possible
+	static constexpr double OPEN_POSITION = 900.0;
 	static constexpr double CLOSED_POSITION = 0.0;
 public:
-	Arm(uint8_t const port) : m_motor{ port } {}
+	Arm(uint8_t const port_1, uint8_t const port_2) : m_motor_1{ port_1, true }, m_motor_2{ port_2 } {}
 
-	void set_position(double const angle) {
-		m_motor.move_absolute(std::clamp(angle, CLOSED_POSITION, OPEN_POSITION), VELOCITY);
+	void set_position(double const angle, double const velocity = VELOCITY) {
+		m_motor_1.move_absolute(std::clamp(angle, CLOSED_POSITION, OPEN_POSITION), velocity);
+		m_motor_2.move_absolute(std::clamp(angle, CLOSED_POSITION, OPEN_POSITION), velocity);
+	}
+	double position() const {
+		return m_motor_1.get_position();
 	}
 	void raise() {
 		set_position(OPEN_POSITION);
@@ -36,8 +40,8 @@ public:
 	void lower() {
 		set_position(CLOSED_POSITION);
 	}
-	void stop_moving() {
-		m_motor.move(0);
+	void stay() {
+		set_position(position(), MOTOR_MAX_VOLTAGE);
 	}
 };
 
@@ -99,9 +103,9 @@ protected:
 class Robot {
 protected:
 	pros::Controller controller{ pros::E_CONTROLLER_MASTER };
-	Drivetrain drivetrain{ 1, 2, 3, 4 };  // FIXME arbitrary ports
-	Claw claw{ 1 };  // FIXME arbitrary ports
-	Arm arm{ 2 };  // FIXME arbitrary ports
+	Drivetrain drivetrain{ 1, 2, 3, 4 };
+	Claw claw{ 3 }; // FIXME arbitrary ports
+	Arm arm{ 1, 2 };
 public:
 	Robot() {}
 
@@ -117,12 +121,12 @@ protected:
 		}
 	}
 	void update_arm() {
-		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
 			arm.raise();
-		} else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+		} else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
 			arm.lower();
 		} else {
-			arm.stop_moving();
+			arm.stay();
 		}
 	}
 	void update_drivetrain() {
