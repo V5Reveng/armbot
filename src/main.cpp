@@ -20,6 +20,7 @@ void autonomous() {}
 class Arm {
 protected:
 	pros::Motor m_motor_1, m_motor_2;
+	double saved_position;
 
 	static constexpr int32_t VELOCITY = 35;  // the lift is geared down pretty significantly so we want to go as fast as possible
 	static constexpr double OPEN_POSITION = 900.0;
@@ -36,12 +37,14 @@ public:
 	}
 	void raise() {
 		set_position(OPEN_POSITION);
+		saved_position = position();
 	}
 	void lower() {
 		set_position(CLOSED_POSITION);
+		saved_position = position();
 	}
 	void stay() {
-		set_position(position(), MOTOR_MAX_VOLTAGE);
+		set_position(saved_position, MOTOR_MAX_VOLTAGE);
 	}
 };
 
