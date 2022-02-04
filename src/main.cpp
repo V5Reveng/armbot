@@ -23,10 +23,10 @@ protected:
 	double saved_position;
 
 	static constexpr int32_t VELOCITY = 35;  // the lift is geared down pretty significantly so we want to go as fast as possible
-	static constexpr double OPEN_POSITION = 900.0;
+	static constexpr double OPEN_POSITION = 1000.0;
 	static constexpr double CLOSED_POSITION = 0.0;
 public:
-	Arm(uint8_t const port_1, uint8_t const port_2) : m_motor_1{ port_1, true }, m_motor_2{ port_2 } {}
+	Arm(uint8_t const port_1, uint8_t const port_2) : m_motor_1{ port_1 }, m_motor_2{ port_2, true } {}
 
 	void set_position(double const angle, double const velocity = VELOCITY) {
 		m_motor_1.move_absolute(std::clamp(angle, CLOSED_POSITION, OPEN_POSITION), velocity);
@@ -80,22 +80,22 @@ protected:
 
 class Drivetrain {
 protected:
-	pros::ADIMotor m_front_left, m_front_right, m_back_left, m_back_right;
-	static constexpr double DAMPENING = 1.0 / 3.0;  // FIXME
+	pros::Motor m_front_left, m_front_right, m_back_left, m_back_right;
+	static constexpr double DAMPENING = 1.0 / 2.0;
 public:
 	Drivetrain(uint8_t const front_left_port, uint8_t const front_right_port, uint8_t const back_left_port, uint8_t const back_right_port)
-		: m_front_left{ front_left_port }, m_front_right{ front_right_port }, m_back_left{ back_left_port }, m_back_right{ back_right_port } {}
+		: m_front_left{ front_left_port }, m_front_right{ front_right_port, true }, m_back_left{ back_left_port }, m_back_right{ back_right_port, true } {}
 
 	void update(double const _forward_axis, double const _strafe_axis, double const _rotate_axis) {
 		auto const forward_axis = transform_motor_power(_forward_axis);
 		auto const strafe_axis = transform_motor_power(_strafe_axis);
 		auto const rotate_axis = transform_motor_power(_rotate_axis);
 
-		m_front_left.set_value(forward_axis + strafe_axis + rotate_axis);
-		m_back_left.set_value(forward_axis - strafe_axis + rotate_axis);
+		m_front_left.move(forward_axis + strafe_axis + rotate_axis);
+		m_back_left.move(forward_axis - strafe_axis + rotate_axis);
 		// right motors are inverted
-		m_front_right.set_value(-(forward_axis - strafe_axis - rotate_axis));
-		m_back_right.set_value(-(forward_axis + strafe_axis - rotate_axis));
+		m_front_right.move(forward_axis - strafe_axis - rotate_axis);
+		m_back_right.move(forward_axis + strafe_axis - rotate_axis);
 	}
 protected:
 	static int32_t transform_motor_power(double const power_out_of_one) {
@@ -106,9 +106,9 @@ protected:
 class Robot {
 protected:
 	pros::Controller controller{ pros::E_CONTROLLER_MASTER };
-	Drivetrain drivetrain{ 1, 2, 3, 4 };
-	Claw claw{ 3 }; // FIXME arbitrary ports
-	Arm arm{ 1, 2 };
+	Drivetrain drivetrain{ 16, 15, 7, 8 };
+	Claw claw{ 3 };  // FIXME arbitrary ports
+	Arm arm{ 9, 10 };
 public:
 	Robot() {}
 
