@@ -25,6 +25,7 @@ protected:
 	static constexpr int32_t VELOCITY = 35;  // the lift is geared down pretty significantly so we want to go as fast as possible
 	static constexpr double OPEN_POSITION = 1000.0;
 	static constexpr double CLOSED_POSITION = 0.0;
+	static constexpr double CLOSED_THRESHOLD = 20.0;
 public:
 	Arm(uint8_t const port_1, uint8_t const port_2) : m_motor_1{ port_1 }, m_motor_2{ port_2, true } {}
 
@@ -44,7 +45,9 @@ public:
 		saved_position = position();
 	}
 	void stay() {
-		set_position(saved_position, MOTOR_MAX_VOLTAGE);
+		if (saved_position > CLOSED_THRESHOLD) {
+			set_position(saved_position, MOTOR_MAX_VOLTAGE);
+		}
 	}
 };
 
