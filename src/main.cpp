@@ -17,7 +17,7 @@ void autonomous() {}
 #define MOTOR_MAX_VOLTAGE 127
 #define CONTROLLER_MAX_ANALOG 127
 
-class Lift {
+class MotorGroup {
 protected:
 	std::vector<pros::Motor> m_motor_group;
 	const int32_t m_velocity;
@@ -28,7 +28,7 @@ protected:
 	static constexpr double CLOSED_POSITION = 0.0;
 	static constexpr double CLOSED_THRESHOLD = 20.0;
 public:
-	Lift(std::vector<pros::Motor> motor_group, int32_t velocity, double open_position)
+	MotorGroup(std::vector<pros::Motor> motor_group, int32_t velocity, double open_position)
 		: m_motor_group{ motor_group }, m_velocity{ velocity }, m_open_position{ open_position } {}
 
 	void set_position(double angle, const int32_t velocity) {
@@ -87,24 +87,24 @@ class Robot {
 protected:
 	pros::Controller controller{ pros::E_CONTROLLER_MASTER };
 	Drivetrain drivetrain{ 16, 15, 7, 8 };
-	Lift claw{ std::vector<pros::Motor>{ pros::Motor{ 3 } }, 20, 800.0 };  // FIXME arbitrary ports
-	Lift arm{ std::vector<pros::Motor>{ pros::Motor{ 9 }, pros::Motor{ 10, true } }, 35, 1000.0 };
+	MotorGroup tray{ std::vector<pros::Motor>{ pros::Motor{ 3 } }, 20, 800.0 };  // FIXME arbitrary ports
+	MotorGroup arm{ std::vector<pros::Motor>{ pros::Motor{ 9 }, pros::Motor{ 10, true } }, 35, 1000.0 };
 public:
 	Robot() {}
 
 	void update() {
 		update_drivetrain();
 		update_arm();
-		update_claw();
+		update_tray();
 	}
 protected:
-	void update_claw() {
+	void update_tray() {
 		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
-			claw.raise();
+			tray.raise();
 		} else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
-			claw.lower();
+			tray.lower();
 		} else {
-			claw.stay();
+			tray.stay();
 		}
 	}
 	void update_arm() {
