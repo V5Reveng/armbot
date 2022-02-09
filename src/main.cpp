@@ -28,10 +28,10 @@ protected:
 	static constexpr double CLOSED_POSITION = 0.0;
 	static constexpr double CLOSED_THRESHOLD = 20.0;
 public:
-	MotorGroup(std::vector<pros::Motor> motor_group, int32_t velocity, double open_position)
+	MotorGroup(std::vector<pros::Motor> const motor_group, int32_t const velocity, double const open_position)
 		: m_motor_group{ motor_group }, m_velocity{ velocity }, m_open_position{ open_position } {}
 
-	void set_position(double angle, const int32_t velocity) {
+	void set_position(double angle, int32_t const velocity) {
 		angle = std::clamp(angle, CLOSED_POSITION, m_open_position);
 		for (pros::Motor m : m_motor_group) {
 			m.move_absolute(angle, velocity);
