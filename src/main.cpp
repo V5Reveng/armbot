@@ -17,68 +17,44 @@ void autonomous() {}
 #define MOTOR_MAX_VOLTAGE 127
 #define CONTROLLER_MAX_ANALOG 127
 
-class Arm {
+class MotorGroup {
 protected:
-	pros::Motor m_motor_1, m_motor_2;
+	std::vector<pros::Motor> m_motor_group;
+	const int32_t m_velocity;
+	const double m_open_position;
+
 	double saved_position;
 
-	static constexpr int32_t VELOCITY = 35;  // the lift is geared down pretty significantly so we want to go as fast as possible
-	static constexpr double OPEN_POSITION = 1000.0;
 	static constexpr double CLOSED_POSITION = 0.0;
 	static constexpr double CLOSED_THRESHOLD = 20.0;
 public:
-	Arm(uint8_t const port_1, uint8_t const port_2) : m_motor_1{ port_1 }, m_motor_2{ port_2, true } {}
+	MotorGroup(std::vector<pros::Motor> const motor_group, int32_t const velocity, double const open_position)
+		: m_motor_group{ motor_group }, m_velocity{ velocity }, m_open_position{ open_position } {}
 
-	void set_position(double angle, int32_t const velocity = VELOCITY) {
-		angle = std::clamp(angle, CLOSED_POSITION, OPEN_POSITION);
-		m_motor_1.move_absolute(angle, velocity);
-		m_motor_2.move_absolute(angle, velocity);
+	void set_position(double angle, int32_t const velocity) {
+		angle = std::clamp(angle, CLOSED_POSITION, m_open_position);
+		for (pros::Motor& m : m_motor_group) {
+			m.move_absolute(angle, velocity);
+		}
 	}
 	double position() const {
-		return m_motor_1.get_position();
+		return m_motor_group[0].get_position();
 	}
+
 	void raise() {
-		set_position(OPEN_POSITION);
+		set_position(m_open_position, m_velocity);
 		saved_position = position();
 	}
+
 	void lower() {
-		set_position(CLOSED_POSITION);
+		set_position(CLOSED_POSITION, m_velocity);
 		saved_position = position();
 	}
+
 	void stay() {
 		if (saved_position > CLOSED_THRESHOLD) {
 			set_position(saved_position, MOTOR_MAX_VOLTAGE);
 		}
-	}
-};
-
-class Claw {
-protected:
-	pros::Motor m_motor;
-	bool m_is_open = false;
-
-	static constexpr double OPEN_POSITION = 60.0;  // FIXME arbitrary
-	static constexpr double CLOSED_POSITION = 0.0;
-	static constexpr int32_t VELOCITY = MOTOR_MAX_VOLTAGE / 2;  // FIXME arbitrary
-public:
-	Claw(uint8_t const port) : m_motor{ port } {}
-	~Claw() {
-		set_open(false);
-	}
-
-	bool is_open() const {
-		return m_is_open;
-	}
-	void set_open(bool const new_state) {
-		m_is_open = new_state;
-		reify_open_state();
-	}
-	void toggle_open() {
-		set_open(!is_open());
-	}
-protected:
-	void reify_open_state() {
-		m_motor.move_absolute(m_is_open ? OPEN_POSITION : CLOSED_POSITION, VELOCITY);
 	}
 };
 
@@ -111,20 +87,24 @@ class Robot {
 protected:
 	pros::Controller controller{ pros::E_CONTROLLER_MASTER };
 	Drivetrain drivetrain{ 16, 15, 7, 8 };
-	Claw claw{ 3 };  // FIXME arbitrary ports
-	Arm arm{ 9, 10 };
+	MotorGroup tray{ std::vector{ pros::Motor{ 3 } }, 20, 800.0 };  // FIXME arbitrary ports
+	MotorGroup arm{ std::vector{ pros::Motor{ 9 }, pros::Motor{ 10, true } }, 35, 1000.0 };
 public:
 	Robot() {}
 
 	void update() {
 		update_drivetrain();
 		update_arm();
-		update_claw();
+		update_tray();
 	}
 protected:
-	void update_claw() {
-		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_X)) {
-			claw.toggle_open();
+	void update_tray() {
+		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+			tray.raise();
+		} else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+			tray.lower();
+		} else {
+			tray.stay();
 		}
 	}
 	void update_arm() {
