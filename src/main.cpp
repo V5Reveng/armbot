@@ -21,19 +21,19 @@ class Lift {
 protected:
 	std::vector<pros::Motor> m_motor_group;
 	const int32_t m_velocity;
-	const double m_open_position ;
+	const double m_open_position;
 
 	double saved_position;
 
 	static constexpr double CLOSED_POSITION = 0.0;
 	static constexpr double CLOSED_THRESHOLD = 20.0;
 public:
-	Lift(std::vector<pros::Motor> motor_group, int32_t velocity, double open_position) 
-		: m_motor_group{motor_group}, m_velocity{velocity}, m_open_position{open_position} {}
+	Lift(std::vector<pros::Motor> motor_group, int32_t velocity, double open_position)
+		: m_motor_group{ motor_group }, m_velocity{ velocity }, m_open_position{ open_position } {}
 
 	void set_position(double angle, const int32_t velocity) {
 		angle = std::clamp(angle, CLOSED_POSITION, m_open_position);
-		for(pros::Motor m : m_motor_group) {
+		for (pros::Motor m : m_motor_group) {
 			m.move_absolute(angle, velocity);
 		}
 	}
@@ -57,7 +57,6 @@ public:
 		}
 	}
 };
-
 
 class Drivetrain {
 protected:
@@ -88,8 +87,8 @@ class Robot {
 protected:
 	pros::Controller controller{ pros::E_CONTROLLER_MASTER };
 	Drivetrain drivetrain{ 16, 15, 7, 8 };
-	Lift claw{ std::vector<pros::Motor> {pros::Motor{3}}, 20, 800.0 };  // FIXME arbitrary ports
-	Lift arm{ std::vector<pros::Motor> {pros::Motor{9}, pros::Motor{10, true}}, 35, 1000.0 };
+	Lift claw{ std::vector<pros::Motor>{ pros::Motor{ 3 } }, 20, 800.0 };  // FIXME arbitrary ports
+	Lift arm{ std::vector<pros::Motor>{ pros::Motor{ 9 }, pros::Motor{ 10, true } }, 35, 1000.0 };
 public:
 	Robot() {}
 
