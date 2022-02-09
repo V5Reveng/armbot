@@ -87,8 +87,8 @@ class Robot {
 protected:
 	pros::Controller controller{ pros::E_CONTROLLER_MASTER };
 	Drivetrain drivetrain{ 16, 15, 7, 8 };
-	MotorGroup tray{ std::vector<pros::Motor>{ pros::Motor{ 3 } }, 20, 800.0 };  // FIXME arbitrary ports
-	MotorGroup arm{ std::vector<pros::Motor>{ pros::Motor{ 9 }, pros::Motor{ 10, true } }, 35, 1000.0 };
+	MotorGroup tray{ std::vector{ pros::Motor{ 3 } }, 20, 800.0 };  // FIXME arbitrary ports
+	MotorGroup arm{ std::vector{ pros::Motor{ 9 }, pros::Motor{ 10, true } }, 35, 1000.0 };
 public:
 	Robot() {}
 
