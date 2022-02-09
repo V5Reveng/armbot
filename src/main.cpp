@@ -33,7 +33,7 @@ public:
 
 	void set_position(double angle, int32_t const velocity) {
 		angle = std::clamp(angle, CLOSED_POSITION, m_open_position);
-		for (pros::Motor m : m_motor_group) {
+		for (pros::Motor& m : m_motor_group) {
 			m.move_absolute(angle, velocity);
 		}
 	}
