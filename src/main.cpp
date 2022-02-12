@@ -96,9 +96,9 @@ public:
 	}
 protected:
 	void update_tray() {
-		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2)) {
+		if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)) {
 			tray.raise();
-		} else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)) {
+		} else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
 			tray.lower();
 		} else {
 			tray.stay();
