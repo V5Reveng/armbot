@@ -26,7 +26,6 @@ protected:
 	double saved_position;
 
 	static constexpr double CLOSED_POSITION = 0.0;
-	static constexpr double CLOSED_THRESHOLD = 20.0;
 public:
 	MotorGroup(std::vector<pros::Motor> const motor_group, int32_t const velocity, double const open_position)
 		: m_motor_group{ motor_group }, m_velocity{ velocity }, m_open_position{ open_position } {}
@@ -52,9 +51,7 @@ public:
 	}
 
 	void stay() {
-		if (saved_position > CLOSED_THRESHOLD) {
-			set_position(saved_position, MOTOR_MAX_VOLTAGE);
-		}
+		set_position(saved_position, MOTOR_MAX_VOLTAGE);
 	}
 };
 
