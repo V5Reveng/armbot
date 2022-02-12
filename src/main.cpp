@@ -122,39 +122,7 @@ protected:
 	}
 };
 
-static const pros::controller_digital_e_t BUTTONS[] = {
-	pros::E_CONTROLLER_DIGITAL_UP, pros::E_CONTROLLER_DIGITAL_DOWN, pros::E_CONTROLLER_DIGITAL_LEFT, pros::E_CONTROLLER_DIGITAL_RIGHT,
-	pros::E_CONTROLLER_DIGITAL_X,  pros::E_CONTROLLER_DIGITAL_B,    pros::E_CONTROLLER_DIGITAL_Y,    pros::E_CONTROLLER_DIGITAL_A,
-};
-
-static pros::controller_digital_e_t next_button() {
-	while (true) {
-		for (unsigned long i = 0; i < sizeof(BUTTONS) / sizeof(BUTTONS[0]); ++i) {
-			if (pros::c::controller_get_digital_new_press(pros::E_CONTROLLER_MASTER, BUTTONS[i])) {
-				return BUTTONS[i];
-			}
-		}
-	}
-}
-
-static bool authenticate() {
-	uint32_t seed = 123;
-	while (true) {
-		auto const button = next_button();
-		if (button == pros::E_CONTROLLER_DIGITAL_R2) {
-			break;
-		} else {
-			seed ^= static_cast<uint32_t>(button) + 0x9e37779b9 + (seed << 6) + (seed >> 2);
-		}
-	}
-	return seed == 4248382663;
-}
-
 void opcontrol() {
-	if (!authenticate()) {
-		return;
-	}
-
 	Robot robot;
 
 	while (true) {
